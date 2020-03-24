@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/ec2-user/sparql-dlt/main.cpp
+iostream
+-
+curl/curl.h
+-
+cstring
+-
+map
+-
+stdlib.h
+-
+signal.h
+-
+stdio.h
+-
+unistd.h
+-
+

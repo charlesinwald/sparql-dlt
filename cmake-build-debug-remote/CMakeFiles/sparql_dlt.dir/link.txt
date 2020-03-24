@@ -1,0 +1,1 @@
+/usr/bin/c++    -std=c++17 -lcurl -g    CMakeFiles/sparql_dlt.dir/main.cpp.o  -o sparql_dlt -rdynamic -lcurl 

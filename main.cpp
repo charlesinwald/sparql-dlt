@@ -7,12 +7,14 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "pool.h"
+
 using namespace std;
 typedef map<std::string, std::string> Params;
 CURL *curl; // CURL easy handle for use in most libcurl calls
 
 void shutdown_handler(int s);
-void make_request(CURLcode &res, const char *query);
+void make_request(const char *query);
 
 void init();
 
@@ -30,20 +32,22 @@ static std::string params_string(Params const &params) {
 
 
 int main() {
-    CURLcode res;
     int request_count = 0;
+    int num_threads =  thread::hardware_concurrency();
 
 
     init();
     if (curl) {
-        for (;;) {
-            make_request(res, "select+distinct+%3FConcept+where+{[]+a+%3FConcept}+LIMIT+100");
-            request_count++;
-            cout << request_count << endl;
-        }
+        auto* pool = new tasks;
+        pool->start(num_threads);
+        pool->queue( [&] (){ return make_request("select+distinct+%3FConcept+where+{[]+a+%3FConcept}+LIMIT+100"); } );
+//        for (;;) {
+//            make_request(res, "select+distinct+%3FConcept+where+{[]+a+%3FConcept}+LIMIT+100");
+//            request_count++;
+//            cout << request_count << endl;
+//        }
         
         return 0;
-//        }
     }
     curl_global_cleanup();
     return 0;
@@ -69,7 +73,7 @@ void init() {
 
 //Handle shutdown by cleaning up CURL
 void shutdown_handler(int s){
-   cout << "\n Shutting Down..." << endl;
+   cout << "Shutting Down..." <<endl;
    curl_easy_cleanup(curl);
    exit(1);
 
@@ -78,7 +82,8 @@ void shutdown_handler(int s){
 /*
  * Make a libCURL request to the sparql endpoint
  */
-void make_request(CURLcode &res, const char *query) {
+void make_request(const char *query) {
+    CURLcode res;
     const auto str = "localhost:8890/sparql?" + params_string({{"default-graph-uri",    ""},
                                                                {"query",                query},
                                                                {"format",               "application/rdf+json"},
@@ -87,7 +92,7 @@ void make_request(CURLcode &res, const char *query) {
                                                                {"timeout",              "30000"},
                                                                {"debug",                "on"},
                                                                {"run",                  "+Run+Query+"}});
-    //cout << str << endl;
+    cout << str << endl;
     curl_easy_setopt(curl, CURLOPT_URL, str.c_str()); //tells CURL how to behave
     /* Perform the request, res will get the return code */
     res = curl_easy_perform(curl);
